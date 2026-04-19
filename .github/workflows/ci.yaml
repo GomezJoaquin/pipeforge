@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  catalog-api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/catalog-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: pytest tests/ -v
+      - run: docker build -t pipeforge/catalog-api:ci .
+
+  orders-api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/orders-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - run: go test -v ./...
+      - run: docker build -t pipeforge/orders-api:ci .
+
+  notifications-worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/notifications-worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm test
+      - run: docker build -t pipeforge/notifications-worker:ci .
